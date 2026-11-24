@@ -3,6 +3,7 @@ import { signOut } from "@/app/login/actions";
 import { redirect } from "next/navigation";
 import SyncTrigger from "./sync-trigger";
 import NavItems from "./nav-items";
+import SearchBar from "./search-bar";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
@@ -26,6 +27,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           <p className="text-xs text-white/35 mt-0.5 truncate">{profile?.workspaces?.name ?? "Workspace"}</p>
         </div>
 
+        <SearchBar />
         <NavItems />
 
         <div className="px-3 pb-5 border-t border-white/[0.06] pt-3">
