@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { signOut } from "@/app/login/actions";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import SyncTrigger from "./sync-trigger";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
@@ -29,6 +30,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           <NavItem href="/dashboard" label="Dashboard" icon={<GridIcon />} />
           <NavItem href="/dashboard/meetings" label="Meetings" icon={<VideoIcon />} />
           <NavItem href="/dashboard/decisions" label="Decisions" icon={<ListIcon />} />
+          <NavItem href="/dashboard/action-items" label="Action Items" icon={<CheckIcon />} />
           <NavItem href="/dashboard/settings" label="Settings" icon={<GearIcon />} />
         </nav>
 
@@ -47,6 +49,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
       {/* Main */}
       <main className="flex-1 min-w-0">{children}</main>
+      <SyncTrigger />
     </div>
   );
 }
@@ -87,6 +90,14 @@ function ListIcon() {
   return (
     <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
       <path d="M2 4H13M2 7.5H13M2 11H9" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function CheckIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+      <path d="M2 7.5L5.5 11L13 4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
