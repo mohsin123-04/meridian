@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { toggleActionItemStatus } from "./actions";
 
 export default async function ActionItemsPage() {
   const supabase = await createClient();
@@ -42,7 +43,6 @@ export default async function ActionItemsPage() {
         </div>
       ) : (
         <div className="space-y-10">
-          {/* Open */}
           <section>
             <div className="flex items-center gap-2 mb-3">
               <h2 className="text-xs font-medium text-white/40 uppercase tracking-widest">Open</h2>
@@ -57,7 +57,6 @@ export default async function ActionItemsPage() {
             )}
           </section>
 
-          {/* Done */}
           {done.length > 0 && (
             <section>
               <div className="flex items-center gap-2 mb-3">
@@ -96,13 +95,24 @@ function ActionRow({ item }: { item: ActionItem }) {
 
   return (
     <div className={`flex items-start gap-3 bg-white/[0.03] border rounded-xl px-5 py-4 ${isDone ? "border-white/[0.04] opacity-50" : "border-white/[0.07]"}`}>
-      <div className={`mt-0.5 w-4 h-4 shrink-0 rounded border flex items-center justify-center ${isDone ? "bg-emerald-500/20 border-emerald-500/40" : "border-white/20"}`}>
-        {isDone && (
-          <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-            <path d="M1.5 5L4 7.5L8.5 2.5" stroke="#34d399" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        )}
-      </div>
+      <form action={toggleActionItemStatus}>
+        <input type="hidden" name="id" value={item.id} />
+        <input type="hidden" name="status" value={isDone ? "open" : "done"} />
+        <button
+          type="submit"
+          className={`mt-0.5 w-4 h-4 shrink-0 rounded border flex items-center justify-center transition-colors cursor-pointer ${
+            isDone
+              ? "bg-emerald-500/20 border-emerald-500/40 hover:bg-emerald-500/10"
+              : "border-white/20 hover:border-white/40"
+          }`}
+        >
+          {isDone && (
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+              <path d="M1.5 5L4 7.5L8.5 2.5" stroke="#34d399" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          )}
+        </button>
+      </form>
 
       <div className="flex-1 min-w-0">
         <p className={`text-sm leading-snug ${isDone ? "line-through text-white/40" : ""}`}>{item.description}</p>

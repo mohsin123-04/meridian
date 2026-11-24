@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { inviteTeammate } from "./actions";
+import { inviteTeammate, renameWorkspace } from "./actions";
 
 export default async function SettingsPage({
   searchParams,
@@ -15,18 +15,26 @@ export default async function SettingsPage({
 
   const params = await searchParams;
 
-  const { data: integrations } = await supabase
-    .from("integrations")
-    .select("provider, status, provider_user_id, updated_at")
-    .eq("user_id", user.id);
+  const [{ data: integrations }, { data: profile }] = await Promise.all([
+    supabase
+      .from("integrations")
+      .select("provider, status, provider_user_id, updated_at")
+      .eq("user_id", user.id),
+    supabase
+      .from("profiles")
+      .select("workspace_id, workspaces(id, name)")
+      .eq("id", user.id)
+      .single(),
+  ]);
 
   const google = integrations?.find((i) => i.provider === "google");
   const zoom = integrations?.find((i) => i.provider === "zoom");
+  const workspaceName = (profile?.workspaces as unknown as { id: string; name: string } | null)?.name ?? "";
 
   return (
     <div className="p-8 max-w-2xl">
       <h1 className="text-xl font-semibold tracking-tight mb-1">Settings</h1>
-      <p className="text-white/40 text-sm mb-8">Manage your integrations and account.</p>
+      <p className="text-white/40 text-sm mb-8">Manage your workspace, integrations, and account.</p>
 
       {params.success && (
         <div className="mb-6 px-4 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm">
@@ -38,6 +46,30 @@ export default async function SettingsPage({
           {params.error}
         </div>
       )}
+
+      <section className="mb-10">
+        <h2 className="text-xs font-medium text-white/40 uppercase tracking-widest mb-3">Workspace</h2>
+        <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl px-5 py-4">
+          <p className="text-sm font-medium mb-1">Workspace name</p>
+          <p className="text-xs text-white/40 mb-4">Visible to all members in your workspace.</p>
+          <form action={renameWorkspace} className="flex gap-2">
+            <input
+              name="name"
+              type="text"
+              defaultValue={workspaceName}
+              placeholder="My Team"
+              required
+              className="flex-1 bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-white/20"
+            />
+            <button
+              type="submit"
+              className="shrink-0 bg-white text-black px-4 py-2 rounded-lg text-sm font-medium hover:bg-white/90 transition-colors"
+            >
+              Save
+            </button>
+          </form>
+        </div>
+      </section>
 
       <section className="mb-10">
         <h2 className="text-xs font-medium text-white/40 uppercase tracking-widest mb-3">Team</h2>
