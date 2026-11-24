@@ -10,7 +10,7 @@ export default async function OnboardingPage({
   const params = await searchParams;
 
   return (
-    <main className="min-h-screen bg-[#0a0a0f] text-white flex items-center justify-center px-4">
+    <main className="min-h-screen bg-[#09080f] text-white flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <h1 className="text-2xl font-semibold tracking-tight mb-1">Set up your workspace</h1>
