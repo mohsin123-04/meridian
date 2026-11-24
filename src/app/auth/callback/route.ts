@@ -8,8 +8,19 @@ export async function GET(request: Request) {
 
   if (code) {
     const supabase = await createClient();
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
-    if (!error) {
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+
+    if (!error && data.user) {
+      // If the user was invited with a workspace_id, assign them to it
+      const invitedWorkspaceId = data.user.user_metadata?.invited_workspace_id;
+      if (invitedWorkspaceId) {
+        await supabase
+          .from("profiles")
+          .update({ workspace_id: invitedWorkspaceId })
+          .eq("id", data.user.id)
+          .is("workspace_id", null);
+      }
+
       return NextResponse.redirect(`${origin}${next}`);
     }
   }

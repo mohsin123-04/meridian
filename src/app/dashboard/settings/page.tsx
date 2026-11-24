@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import { inviteTeammate } from "./actions";
 
 export default async function SettingsPage({
   searchParams,
@@ -37,6 +38,29 @@ export default async function SettingsPage({
           {params.error}
         </div>
       )}
+
+      <section className="mb-10">
+        <h2 className="text-xs font-medium text-white/40 uppercase tracking-widest mb-3">Team</h2>
+        <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl px-5 py-4">
+          <p className="text-sm font-medium mb-1">Invite a teammate</p>
+          <p className="text-xs text-white/40 mb-4">They&apos;ll get an email and join your workspace automatically.</p>
+          <form action={inviteTeammate} className="flex gap-2">
+            <input
+              name="email"
+              type="email"
+              placeholder="teammate@company.com"
+              required
+              className="flex-1 bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-white/20"
+            />
+            <button
+              type="submit"
+              className="shrink-0 bg-white text-black px-4 py-2 rounded-lg text-sm font-medium hover:bg-white/90 transition-colors"
+            >
+              Send invite
+            </button>
+          </form>
+        </div>
+      </section>
 
       <section>
         <h2 className="text-xs font-medium text-white/40 uppercase tracking-widest mb-3">Integrations</h2>
@@ -109,7 +133,7 @@ function IntegrationCard({
         className={
           connected
             ? "shrink-0 text-xs text-white/35 hover:text-red-400 transition-colors"
-            : "shrink-0 px-3 py-1.5 rounded-lg bg-violet-600 hover:bg-violet-500 text-xs font-medium transition-colors"
+            : "shrink-0 px-3 py-1.5 rounded-lg bg-white text-black text-xs font-medium hover:bg-white/90 transition-colors"
         }
       >
         {connected ? "Disconnect" : "Connect"}

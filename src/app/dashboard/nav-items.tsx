@@ -8,6 +8,7 @@ const items = [
   { href: "/dashboard/meetings", label: "Meetings", icon: <VideoIcon /> },
   { href: "/dashboard/decisions", label: "Decisions", icon: <ListIcon /> },
   { href: "/dashboard/action-items", label: "Action Items", icon: <CheckIcon /> },
+  { href: "/dashboard/briefs", label: "Briefs", icon: <BriefIcon /> },
   { href: "/dashboard/settings", label: "Settings", icon: <GearIcon /> },
 ];
 
@@ -75,6 +76,15 @@ function CheckIcon() {
   return (
     <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
       <path d="M2 7.5L5.5 11L13 4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function BriefIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+      <rect x="2" y="1" width="11" height="13" rx="1.5" stroke="currentColor" strokeWidth="1.2" />
+      <path d="M5 5H10M5 7.5H10M5 10H8" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
     </svg>
   );
 }

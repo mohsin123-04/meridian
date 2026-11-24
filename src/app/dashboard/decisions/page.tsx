@@ -3,8 +3,14 @@ export const dynamic = "force-dynamic";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import SearchInput from "./search-input";
+import { Suspense } from "react";
 
-export default async function DecisionsPage() {
+export default async function DecisionsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>;
+}) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
@@ -17,15 +23,20 @@ export default async function DecisionsPage() {
 
   if (!profile?.workspace_id) redirect("/onboarding");
 
-  const { data: decisions } = await supabase
+  const { q } = await searchParams;
+
+  let query = supabase
     .from("decisions")
-    .select(`
-      id, summary, context, topics, created_at,
-      meetings ( id, title, started_at )
-    `)
+    .select(`id, summary, context, topics, created_at, meetings ( id, title, started_at )`)
     .eq("workspace_id", profile.workspace_id)
     .order("created_at", { ascending: false })
     .limit(100);
+
+  if (q) {
+    query = query.ilike("summary", `%${q}%`);
+  }
+
+  const { data: decisions } = await query;
 
   // Group by topic for the filter list
   const allTopics = Array.from(
@@ -34,8 +45,15 @@ export default async function DecisionsPage() {
 
   return (
     <div className="p-8">
-      <h1 className="text-xl font-semibold tracking-tight mb-1">Decisions</h1>
-      <p className="text-white/40 text-sm mb-8">Every decision extracted from your meetings, in one place.</p>
+      <div className="flex items-center justify-between gap-4 mb-8">
+        <div>
+          <h1 className="text-xl font-semibold tracking-tight mb-1">Decisions</h1>
+          <p className="text-white/40 text-sm">Every decision extracted from your meetings, in one place.</p>
+        </div>
+        <Suspense>
+          <SearchInput defaultValue={q} />
+        </Suspense>
+      </div>
 
       {!decisions?.length ? (
         <div className="bg-white/[0.02] border border-white/[0.05] rounded-xl px-4 py-16 text-center">
