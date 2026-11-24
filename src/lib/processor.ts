@@ -1,0 +1,178 @@
+import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
+import { createClient } from "@/lib/supabase/server";
+
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+
+const extractionSchema = {
+  type: SchemaType.OBJECT,
+  properties: {
+    decisions: {
+      type: SchemaType.ARRAY,
+      items: {
+        type: SchemaType.OBJECT,
+        properties: {
+          summary: { type: SchemaType.STRING },
+          context: { type: SchemaType.STRING },
+          topics: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
+        },
+        required: ["summary", "context", "topics"],
+      },
+    },
+    action_items: {
+      type: SchemaType.ARRAY,
+      items: {
+        type: SchemaType.OBJECT,
+        properties: {
+          description: { type: SchemaType.STRING },
+          owner_name: { type: SchemaType.STRING },
+          due_date: { type: SchemaType.STRING },
+        },
+        required: ["description", "owner_name"],
+      },
+    },
+    health: {
+      type: SchemaType.OBJECT,
+      properties: {
+        efficiency_score: { type: SchemaType.INTEGER },
+        recurring_topics: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
+        dominant_speaker: { type: SchemaType.STRING },
+        summary: { type: SchemaType.STRING },
+      },
+      required: ["efficiency_score", "recurring_topics", "dominant_speaker", "summary"],
+    },
+    participants: {
+      type: SchemaType.ARRAY,
+      items: {
+        type: SchemaType.OBJECT,
+        properties: {
+          name: { type: SchemaType.STRING },
+          talk_time_pct: { type: SchemaType.INTEGER },
+        },
+        required: ["name", "talk_time_pct"],
+      },
+    },
+    title: { type: SchemaType.STRING },
+  },
+  required: ["decisions", "action_items", "health", "participants", "title"],
+};
+
+const PROMPT = `You are an expert meeting analyst. Analyze the following meeting transcript and extract structured information.
+
+For decisions: Extract every concrete decision made. Include a one-sentence summary, the context/reasoning behind it, and relevant topic tags (e.g. "product", "hiring", "engineering", "budget").
+
+For action items: Extract every task assigned or committed to. Include who owns it and an estimated due date if mentioned (ISO format YYYY-MM-DD, or omit if not mentioned).
+
+For health:
+- efficiency_score: 0-100 based on how focused and productive the meeting was (100 = every minute was valuable, 0 = complete waste of time)
+- recurring_topics: topics that seemed like they've been discussed before without resolution (e.g. "deployment process", "team capacity")
+- dominant_speaker: name of the person who spoke the most
+- summary: 2-3 sentence summary of the meeting
+
+For participants: Estimate talk time percentage for each participant (must sum to 100).
+
+For title: Generate a concise meeting title if one isn't obvious from the transcript.
+
+TRANSCRIPT:
+`;
+
+export async function processMeeting(
+  meetingId: string,
+  transcript: string,
+  workspaceId: string
+): Promise<void> {
+  const supabase = await createClient();
+
+  try {
+    const model = genAI.getGenerativeModel({
+      model: "gemini-4-hydrogen",
+      generationConfig: {
+        responseMimeType: "application/json",
+        responseSchema: extractionSchema as any,
+      },
+    });
+
+    const result = await model.generateContent(PROMPT + transcript);
+    const text = result.response.text();
+    const extracted = JSON.parse(text);
+
+    // Update meeting title if we generated one
+    if (extracted.title) {
+      await supabase
+        .from("meetings")
+        .update({ title: extracted.title })
+        .eq("id", meetingId)
+        .is("title", null);
+    }
+
+    // Insert decisions
+    if (extracted.decisions?.length > 0) {
+      await supabase.from("decisions").insert(
+        extracted.decisions.map((d: any) => ({
+          meeting_id: meetingId,
+          workspace_id: workspaceId,
+          summary: d.summary,
+          context: d.context,
+          topics: d.topics ?? [],
+        }))
+      );
+    }
+
+    // Insert action items
+    if (extracted.action_items?.length > 0) {
+      await supabase.from("action_items").insert(
+        extracted.action_items.map((a: any) => ({
+          meeting_id: meetingId,
+          workspace_id: workspaceId,
+          description: a.description,
+          owner_name: a.owner_name || null,
+          due_date: a.due_date || null,
+          status: "open",
+        }))
+      );
+    }
+
+    // Insert meeting health
+    const health = extracted.health;
+    await supabase.from("meeting_health").upsert({
+      meeting_id: meetingId,
+      workspace_id: workspaceId,
+      efficiency_score: health.efficiency_score,
+      decision_count: extracted.decisions?.length ?? 0,
+      action_item_count: extracted.action_items?.length ?? 0,
+      recurring_topics: health.recurring_topics ?? [],
+      dominant_speaker: health.dominant_speaker,
+    }, { onConflict: "meeting_id" });
+
+    // Insert participants with talk time
+    if (extracted.participants?.length > 0) {
+      const { data: meeting } = await supabase
+        .from("meetings")
+        .select("duration_mins")
+        .eq("id", meetingId)
+        .single();
+
+      const totalSecs = (meeting?.duration_mins ?? 60) * 60;
+
+      await supabase.from("meeting_participants").insert(
+        extracted.participants.map((p: any) => ({
+          meeting_id: meetingId,
+          name: p.name,
+          talk_time_secs: Math.round((p.talk_time_pct / 100) * totalSecs),
+        }))
+      );
+    }
+
+    // Mark meeting as processed
+    await supabase
+      .from("meetings")
+      .update({ status: "processed" })
+      .eq("id", meetingId);
+
+  } catch (err) {
+    console.error(`AI processing failed for meeting ${meetingId}:`, err);
+    await supabase
+      .from("meetings")
+      .update({ status: "failed" })
+      .eq("id", meetingId);
+  }
+}
