@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { createClient } from "@/lib/supabase/server";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
+import { reprocessMeeting } from "./actions";
 
 export default async function MeetingDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -32,6 +33,10 @@ export default async function MeetingDetailPage({ params }: { params: Promise<{ 
     meeting.source === "google_meet" ? "Google Meet" :
     meeting.source === "zoom" ? "Zoom" : "Manual";
 
+  const canReprocess =
+    (meeting.status === "failed" || meeting.status === "processed") &&
+    !!meeting.transcript;
+
   return (
     <div className="p-8 max-w-3xl">
       {/* Back */}
@@ -40,15 +45,35 @@ export default async function MeetingDetailPage({ params }: { params: Promise<{ 
       </Link>
 
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-xl font-semibold tracking-tight">{meeting.title ?? "Untitled meeting"}</h1>
-        <p className="text-sm text-white/40 mt-1">
-          {meeting.started_at
-            ? new Date(meeting.started_at).toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })
-            : "Date unknown"}
-          {meeting.duration_mins ? ` · ${meeting.duration_mins}m` : ""}
-          {` · ${sourceLabel}`}
-        </p>
+      <div className="flex items-start justify-between gap-4 mb-8">
+        <div>
+          <h1 className="text-xl font-semibold tracking-tight">{meeting.title ?? "Untitled meeting"}</h1>
+          <p className="text-sm text-white/40 mt-1">
+            {meeting.started_at
+              ? new Date(meeting.started_at).toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })
+              : "Date unknown"}
+            {meeting.duration_mins ? ` · ${meeting.duration_mins}m` : ""}
+            {` · ${sourceLabel}`}
+          </p>
+        </div>
+
+        {canReprocess && (
+          <form action={reprocessMeeting} className="shrink-0">
+            <input type="hidden" name="id" value={meeting.id} />
+            <button
+              type="submit"
+              className="text-xs text-white/35 hover:text-white border border-white/[0.08] hover:border-white/20 rounded-lg px-3 py-1.5 transition-colors"
+            >
+              Reprocess
+            </button>
+          </form>
+        )}
+
+        {meeting.status === "processing" && (
+          <span className="shrink-0 text-xs text-amber-400 border border-amber-500/20 rounded-lg px-3 py-1.5">
+            Processing...
+          </span>
+        )}
       </div>
 
       {/* Health card */}
@@ -132,7 +157,7 @@ export default async function MeetingDetailPage({ params }: { params: Promise<{ 
                 {d.topics?.length > 0 && (
                   <div className="flex flex-wrap gap-1.5 mt-3">
                     {d.topics.map((t: string) => (
-                      <span key={t} className="text-xs px-2 py-0.5 rounded-full bg-violet-500/10 text-violet-400 border border-violet-500/20">
+                      <span key={t} className="text-xs px-2 py-0.5 rounded-full bg-white/[0.06] text-white/50 border border-white/[0.08]">
                         {t}
                       </span>
                     ))}
@@ -153,9 +178,15 @@ export default async function MeetingDetailPage({ params }: { params: Promise<{ 
           <div className="space-y-2">
             {actionItems.map((a) => (
               <div key={a.id} className="flex items-start gap-3 bg-white/[0.03] border border-white/[0.07] rounded-xl px-5 py-4">
-                <div className="mt-0.5 w-4 h-4 shrink-0 rounded border border-white/20" />
+                <div className={`mt-0.5 w-4 h-4 shrink-0 rounded border flex items-center justify-center ${a.status === "done" ? "bg-emerald-500/20 border-emerald-500/40" : "border-white/20"}`}>
+                  {a.status === "done" && (
+                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                      <path d="M1.5 5L4 7.5L8.5 2.5" stroke="#34d399" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  )}
+                </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm">{a.description}</p>
+                  <p className={`text-sm ${a.status === "done" ? "line-through text-white/40" : ""}`}>{a.description}</p>
                   <p className="text-xs text-white/35 mt-1">
                     {a.owner_name && <span>{a.owner_name}</span>}
                     {a.owner_name && a.due_date && <span> · </span>}
@@ -181,13 +212,13 @@ export default async function MeetingDetailPage({ params }: { params: Promise<{ 
               const pct = totalSecs > 0 ? Math.round(((p.talk_time_secs ?? 0) / totalSecs) * 100) : 0;
               return (
                 <div key={p.id} className="flex items-center gap-3 bg-white/[0.03] border border-white/[0.06] rounded-xl px-4 py-3">
-                  <div className="w-7 h-7 rounded-full bg-violet-600/30 flex items-center justify-center text-xs font-medium text-violet-300 shrink-0">
+                  <div className="w-7 h-7 rounded-full bg-white/[0.08] flex items-center justify-center text-xs font-medium text-white/70 shrink-0">
                     {p.name.charAt(0).toUpperCase()}
                   </div>
                   <span className="flex-1 text-sm">{p.name}</span>
                   <div className="flex items-center gap-2">
                     <div className="w-20 h-1.5 bg-white/[0.08] rounded-full overflow-hidden">
-                      <div className="h-full bg-violet-500 rounded-full" style={{ width: `${pct}%` }} />
+                      <div className="h-full bg-white/40 rounded-full" style={{ width: `${pct}%` }} />
                     </div>
                     <span className="text-xs text-white/35 w-7 text-right">{pct}%</span>
                   </div>
