@@ -37,7 +37,15 @@ export default async function MeetingsPage() {
 
   return (
     <div className="p-8">
-      <h1 className="text-xl font-semibold tracking-tight mb-1">Meetings</h1>
+      <div className="flex items-center justify-between mb-1">
+        <h1 className="text-xl font-semibold tracking-tight">Meetings</h1>
+        <Link
+          href="/dashboard/meetings/new"
+          className="text-xs bg-white text-black px-3 py-1.5 rounded-lg font-medium hover:bg-white/90 transition-colors"
+        >
+          Upload transcript
+        </Link>
+      </div>
       <p className="text-white/40 text-sm mb-8">All captured meetings, ordered by most recent.</p>
 
       {!meetings?.length ? (
