@@ -52,7 +52,7 @@ export async function GET(request: Request) {
       provider_user_id: email,
     }, { onConflict: "user_id,provider" });
 
-    return NextResponse.redirect(`${origin}/dashboard/settings?connected=google`);
+    return NextResponse.redirect(`${origin}/dashboard/settings?success=Google+Meet+connected`);
   } catch (err) {
     console.error("Google OAuth error:", err);
     return NextResponse.redirect(`${origin}/dashboard/settings?error=google_failed`);

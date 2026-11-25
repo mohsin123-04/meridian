@@ -57,7 +57,7 @@ export async function GET(request: Request) {
       provider_user_id: zoomUser.email ?? null,
     }, { onConflict: "user_id,provider" });
 
-    return NextResponse.redirect(`${origin}/dashboard/settings?connected=zoom`);
+    return NextResponse.redirect(`${origin}/dashboard/settings?success=Zoom+connected`);
   } catch (err) {
     console.error("Zoom OAuth error:", err);
     return NextResponse.redirect(`${origin}/dashboard/settings?error=zoom_failed`);
