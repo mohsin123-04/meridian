@@ -60,7 +60,7 @@ export default async function SettingsPage({
             />
             <button
               type="submit"
-              className="shrink-0 bg-white text-black px-4 py-2 rounded-lg text-sm font-medium hover:bg-white/90 transition-colors"
+              className="shrink-0 bg-white text-black px-4 py-2 rounded-lg text-sm font-medium hover:bg-white/90 active:bg-white/75 active:scale-95 transition-all"
             >
               Save
             </button>
@@ -83,7 +83,7 @@ export default async function SettingsPage({
             />
             <button
               type="submit"
-              className="shrink-0 bg-white text-black px-4 py-2 rounded-lg text-sm font-medium hover:bg-white/90 transition-colors"
+              className="shrink-0 bg-white text-black px-4 py-2 rounded-lg text-sm font-medium hover:bg-white/90 active:bg-white/75 active:scale-95 transition-all"
             >
               Send invite
             </button>
@@ -141,8 +141,8 @@ export default async function SettingsPage({
                 href={slack ? "/api/integrations/slack/disconnect" : "/api/integrations/slack/connect"}
                 className={
                   slack
-                    ? "shrink-0 text-xs text-white/35 hover:text-red-400 transition-colors"
-                    : "shrink-0 px-3 py-1.5 rounded-lg bg-white text-black text-xs font-medium hover:bg-white/90 transition-colors"
+                    ? "shrink-0 text-xs text-white/35 hover:text-red-400 active:text-red-500 active:scale-95 transition-all"
+                    : "shrink-0 px-3 py-1.5 rounded-lg bg-white text-black text-xs font-medium hover:bg-white/90 active:bg-white/75 active:scale-95 transition-all"
                 }
               >
                 {slack ? "Disconnect" : "Connect"}
@@ -205,8 +205,8 @@ function IntegrationCard({
         href={connected ? disconnectHref : connectHref}
         className={
           connected
-            ? "shrink-0 text-xs text-white/35 hover:text-red-400 transition-colors"
-            : "shrink-0 px-3 py-1.5 rounded-lg bg-white text-black text-xs font-medium hover:bg-white/90 transition-colors"
+            ? "shrink-0 text-xs text-white/35 hover:text-red-400 active:text-red-500 active:scale-95 transition-all"
+            : "shrink-0 px-3 py-1.5 rounded-lg bg-white text-black text-xs font-medium hover:bg-white/90 active:bg-white/75 active:scale-95 transition-all"
         }
       >
         {connected ? "Disconnect" : "Connect"}

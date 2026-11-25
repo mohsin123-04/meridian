@@ -28,10 +28,10 @@ export default function NavItems() {
           <Link
             key={item.href}
             href={item.href}
-            className={`flex items-center gap-2.5 px-2 py-2 rounded-lg text-sm transition-colors ${
+            className={`flex items-center gap-2.5 px-2 py-2 rounded-lg text-sm transition-all active:scale-[0.97] ${
               active
                 ? "bg-white/[0.08] text-white"
-                : "text-white/50 hover:text-white hover:bg-white/[0.06]"
+                : "text-white/50 hover:text-white hover:bg-white/[0.06] active:bg-white/[0.1]"
             }`}
           >
             <span className={`shrink-0 ${active ? "opacity-100" : "opacity-60"}`}>

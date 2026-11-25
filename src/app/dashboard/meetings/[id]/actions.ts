@@ -4,6 +4,28 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { redirect } from "next/navigation";
 
+export async function deleteMeeting(formData: FormData) {
+  const meetingId = formData.get("id") as string;
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const admin = createAdminClient();
+
+  await Promise.all([
+    admin.from("decisions").delete().eq("meeting_id", meetingId),
+    admin.from("action_items").delete().eq("meeting_id", meetingId),
+    admin.from("meeting_health").delete().eq("meeting_id", meetingId),
+    admin.from("meeting_participants").delete().eq("meeting_id", meetingId),
+    admin.from("meeting_briefs").delete().eq("meeting_id", meetingId),
+  ]);
+
+  await admin.from("meetings").delete().eq("id", meetingId);
+
+  redirect("/dashboard/meetings");
+}
+
 export async function reprocessMeeting(formData: FormData) {
   const meetingId = formData.get("id") as string;
 

@@ -41,7 +41,7 @@ export default async function MeetingsPage() {
         <h1 className="text-xl font-semibold tracking-tight">Meetings</h1>
         <Link
           href="/dashboard/meetings/new"
-          className="text-xs bg-white text-black px-3 py-1.5 rounded-lg font-medium hover:bg-white/90 transition-colors"
+          className="text-xs bg-white text-black px-3 py-1.5 rounded-lg font-medium hover:bg-white/90 active:bg-white/75 active:scale-95 transition-all"
         >
           Upload transcript
         </Link>
@@ -138,7 +138,7 @@ function MeetingRow({ meeting, isRecurring }: { meeting: MeetingWithHealth; isRe
   return (
     <Link
       href={`/dashboard/meetings/${meeting.id}`}
-      className="flex items-center gap-4 bg-white/[0.03] border border-white/[0.06] rounded-xl px-5 py-4 hover:bg-white/[0.05] transition-colors"
+      className="flex items-center gap-4 bg-white/[0.03] border border-white/[0.06] rounded-xl px-5 py-4 hover:bg-white/[0.05] active:bg-white/[0.07] active:scale-[0.995] transition-all"
     >
       {/* Score badge */}
       <div className="shrink-0 w-10 h-10 rounded-lg flex items-center justify-center bg-white/[0.05]">

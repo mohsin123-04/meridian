@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import { createClient } from "@/lib/supabase/server";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
-import { reprocessMeeting } from "./actions";
+import { reprocessMeeting, deleteMeeting } from "./actions";
 import ProcessTrigger from "./process-trigger";
 
 export default async function MeetingDetailPage({
@@ -68,23 +68,35 @@ export default async function MeetingDetailPage({
           </p>
         </div>
 
-        {canReprocess && (
-          <form action={reprocessMeeting} className="shrink-0">
+        <div className="flex items-center gap-2 shrink-0">
+          {canReprocess && (
+            <form action={reprocessMeeting}>
+              <input type="hidden" name="id" value={meeting.id} />
+              <button
+                type="submit"
+                className="text-xs text-white/40 hover:text-white border border-white/[0.08] hover:border-white/20 hover:bg-white/[0.04] active:bg-white/[0.08] active:scale-95 rounded-lg px-3 py-1.5 transition-all"
+              >
+                Reprocess
+              </button>
+            </form>
+          )}
+
+          <form action={deleteMeeting}>
             <input type="hidden" name="id" value={meeting.id} />
             <button
               type="submit"
-              className="text-xs text-white/35 hover:text-white border border-white/[0.08] hover:border-white/20 rounded-lg px-3 py-1.5 transition-colors"
+              className="text-xs text-white/40 hover:text-red-400 border border-white/[0.08] hover:border-red-500/30 hover:bg-red-500/[0.06] active:bg-red-500/[0.12] active:scale-95 rounded-lg px-3 py-1.5 transition-all"
             >
-              Reprocess
+              Delete
             </button>
           </form>
-        )}
 
-        {meeting.status === "processing" && (
-          <span className="shrink-0 text-xs text-amber-400 border border-amber-500/20 rounded-lg px-3 py-1.5">
-            Processing...
-          </span>
-        )}
+          {meeting.status === "processing" && (
+            <span className="text-xs text-amber-400 border border-amber-500/20 rounded-lg px-3 py-1.5">
+              Processing...
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Health card */}

@@ -72,13 +72,13 @@ export default async function NewMeetingPage({
         <div className="flex items-center gap-3 pt-2">
           <button
             type="submit"
-            className="bg-white text-black hover:bg-white/90 transition-colors rounded-xl px-5 py-2.5 text-sm font-medium"
+            className="bg-white text-black hover:bg-white/90 active:bg-white/75 active:scale-95 transition-all rounded-xl px-5 py-2.5 text-sm font-medium"
           >
             Process meeting
           </button>
           <a
             href="/dashboard/meetings"
-            className="text-sm text-white/35 hover:text-white transition-colors"
+            className="text-sm text-white/35 hover:text-white active:text-white/60 active:scale-95 transition-all"
           >
             Cancel
           </a>
