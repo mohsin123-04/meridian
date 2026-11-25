@@ -85,7 +85,7 @@ export async function processMeeting(
 
   try {
     const model = genAI.getGenerativeModel({
-      model: "gemini-3.8-flash",
+      model: "gemini-2.5-flash",
       generationConfig: {
         responseMimeType: "application/json",
         responseSchema: extractionSchema as any,
@@ -99,7 +99,7 @@ export async function processMeeting(
         break;
       } catch (err: any) {
         if (err?.status === 503 && attempt < 3) {
-          await new Promise(r => setTimeout(r, 3000 * (attempt + 1)));
+          await new Promise(r => setTimeout(r, 1500 * (attempt + 1)));
           continue;
         }
         throw err;
