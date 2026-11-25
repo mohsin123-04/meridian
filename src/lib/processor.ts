@@ -92,7 +92,20 @@ export async function processMeeting(
       },
     });
 
-    const result = await model.generateContent(PROMPT + transcript);
+    let result;
+    for (let attempt = 0; attempt < 4; attempt++) {
+      try {
+        result = await model.generateContent(PROMPT + transcript);
+        break;
+      } catch (err: any) {
+        if (err?.status === 503 && attempt < 3) {
+          await new Promise(r => setTimeout(r, 3000 * (attempt + 1)));
+          continue;
+        }
+        throw err;
+      }
+    }
+    if (!result) throw new Error("Gemini failed after retries");
     const text = result.response.text();
     const extracted = JSON.parse(text);
 
