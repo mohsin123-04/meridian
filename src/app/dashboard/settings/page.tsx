@@ -1,6 +1,6 @@
 export const dynamic = "force-dynamic";
 
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { redirect } from "next/navigation";
 import { inviteTeammate, renameWorkspace } from "./actions";
 import SlackChannelPicker from "./slack-channel-picker";
@@ -17,8 +17,8 @@ export default async function SettingsPage({
   const params = await searchParams;
   const profile = await getProfile();
 
-  const supabase = await createClient();
-  const { data: integrations } = await supabase
+  const admin = createAdminClient();
+  const { data: integrations } = await admin
     .from("integrations")
     .select("provider, status, provider_user_id, updated_at, refresh_token")
     .eq("user_id", user.id);

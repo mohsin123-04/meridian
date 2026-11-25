@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { exchangeGoogleCode, getGoogleUserEmail } from "@/lib/google";
 import { NextResponse } from "next/server";
 
@@ -41,7 +42,8 @@ export async function GET(request: Request) {
       return NextResponse.redirect(`${origin}/onboarding`);
     }
 
-    await supabase.from("integrations").upsert({
+    const admin = createAdminClient();
+    await admin.from("integrations").upsert({
       user_id: user.id,
       workspace_id: profile.workspace_id,
       provider: "google",

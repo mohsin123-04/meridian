@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { exchangeZoomCode } from "@/lib/zoom";
 import { NextResponse } from "next/server";
 
@@ -46,7 +47,8 @@ export async function GET(request: Request) {
     });
     const zoomUser = zoomUserRes.ok ? await zoomUserRes.json() : {};
 
-    await supabase.from("integrations").upsert({
+    const admin = createAdminClient();
+    await admin.from("integrations").upsert({
       user_id: user.id,
       workspace_id: profile.workspace_id,
       provider: "zoom",
