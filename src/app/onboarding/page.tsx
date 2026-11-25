@@ -31,7 +31,7 @@ export default async function OnboardingPage({
               placeholder="Company or team name"
               required
               minLength={2}
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm placeholder:text-white/30 focus:outline-none focus:border-violet-500/50"
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm placeholder:text-white/30 focus:outline-none focus:border-white/25 transition-colors"
             />
             <p className="text-white/25 text-xs mt-2 ml-1">
               You can invite teammates after setup.
@@ -39,7 +39,7 @@ export default async function OnboardingPage({
           </div>
           <button
             type="submit"
-            className="w-full bg-violet-600 hover:bg-violet-500 transition-colors rounded-xl px-4 py-3 text-sm font-medium"
+            className="w-full bg-white text-black hover:bg-white/90 transition-colors rounded-xl px-4 py-3 text-sm font-medium"
           >
             Create workspace
           </button>

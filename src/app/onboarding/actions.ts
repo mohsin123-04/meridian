@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { redirect } from "next/navigation";
 
 function slugify(name: string) {
@@ -31,7 +32,8 @@ export async function createWorkspace(formData: FormData) {
     slug = `${slug}-${Math.random().toString(36).slice(2, 6)}`;
   }
 
-  const { data: workspace, error: wsError } = await supabase
+  const admin = createAdminClient();
+  const { data: workspace, error: wsError } = await admin
     .from("workspaces")
     .insert({ name, slug })
     .select("id")

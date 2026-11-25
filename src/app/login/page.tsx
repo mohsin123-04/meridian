@@ -27,7 +27,7 @@ export default async function LoginPage({
         )}
 
         {params.message && (
-          <div className="mb-4 px-4 py-3 rounded-xl bg-violet-500/10 border border-violet-500/20 text-violet-300 text-sm">
+          <div className="mb-4 px-4 py-3 rounded-xl bg-white/[0.05] border border-white/10 text-white/60 text-sm">
             {params.message}
           </div>
         )}
@@ -57,7 +57,7 @@ export default async function LoginPage({
               type="text"
               placeholder="Full name"
               required
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm placeholder:text-white/30 focus:outline-none focus:border-violet-500/50"
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm placeholder:text-white/30 focus:outline-none focus:border-white/25 transition-colors"
             />
           )}
           <input
@@ -65,7 +65,7 @@ export default async function LoginPage({
             type="email"
             placeholder="Email"
             required
-            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm placeholder:text-white/30 focus:outline-none focus:border-violet-500/50"
+            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm placeholder:text-white/30 focus:outline-none focus:border-white/25 transition-colors"
           />
           <input
             name="password"
@@ -73,11 +73,11 @@ export default async function LoginPage({
             placeholder="Password"
             required
             minLength={8}
-            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm placeholder:text-white/30 focus:outline-none focus:border-violet-500/50"
+            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm placeholder:text-white/30 focus:outline-none focus:border-white/25 transition-colors"
           />
           <button
             type="submit"
-            className="w-full bg-violet-600 hover:bg-violet-500 transition-colors rounded-xl px-4 py-3 text-sm font-medium"
+            className="w-full bg-white text-black hover:bg-white/90 transition-colors rounded-xl px-4 py-3 text-sm font-medium"
           >
             {isSignUp ? "Create account" : "Sign in"}
           </button>
@@ -87,12 +87,12 @@ export default async function LoginPage({
           {isSignUp ? (
             <>
               Already have an account?{" "}
-              <a href="/login" className="text-violet-400 hover:text-violet-300">Sign in</a>
+              <a href="/login" className="text-white/60 hover:text-white transition-colors">Sign in</a>
             </>
           ) : (
             <>
               No account?{" "}
-              <a href="/login?tab=signup" className="text-violet-400 hover:text-violet-300">Sign up free</a>
+              <a href="/login?tab=signup" className="text-white/60 hover:text-white transition-colors">Sign up free</a>
             </>
           )}
         </p>

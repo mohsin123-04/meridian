@@ -33,6 +33,15 @@ export async function signUpWithEmail(formData: FormData) {
   });
 
   if (error) {
+    const alreadyExists =
+      error.message.toLowerCase().includes("already registered") ||
+      error.message.toLowerCase().includes("already been registered") ||
+      error.message.toLowerCase().includes("database error");
+
+    if (alreadyExists) {
+      redirect("/login?error=An account with that email already exists. Sign in instead.");
+    }
+
     redirect(`/login?error=${encodeURIComponent(error.message)}`);
   }
 
