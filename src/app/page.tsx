@@ -24,11 +24,11 @@ export default function LandingPage() {
               Every decision your team makes in a meeting, in one searchable place.
             </h1>
             <p className="text-white/55 text-lg leading-relaxed mb-10">
-              Meridian connects to Zoom and Google Meet and extracts decisions, action items, and meeting health automatically. No notes to write.
+              Meridian connects to Zoom, Google Meet and Slack and extracts decisions, action items and meeting health automatically. No notes to write.
             </p>
             <div className="flex items-center gap-4">
               <a href="/login" className="bg-white text-black hover:bg-white/90 transition-colors px-5 py-2.5 rounded-lg text-sm font-medium">
-                Get started free
+                Get started
               </a>
               <a href="#how-it-works" className="text-sm text-white/45 hover:text-white transition-colors">
                 See how it works →
@@ -103,13 +103,13 @@ export default function LandingPage() {
               {
                 n: "01",
                 title: "Connect your meetings",
-                body: "Link your Zoom or Google Meet account via OAuth. Takes about 90 seconds. Meridian is notified automatically when any meeting ends.",
+                body: "Link your Zoom or Google Meet account via OAuth. Takes about 90 seconds. Meridian is notified automatically when any meeting ends and posts summaries to Slack.",
                 flip: false,
                 detail: (
                   <div className="bg-[#120f1e] border border-white/[0.07] rounded-2xl p-6 space-y-3">
                     <p className="text-xs text-white/35 uppercase tracking-widest">Supported platforms</p>
                     <div className="space-y-2">
-                      {["Zoom", "Google Meet"].map((p) => (
+                      {["Zoom", "Google Meet", "Slack"].map((p) => (
                         <div key={p} className="flex items-center gap-3 text-sm">
                           <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
                           <span className="text-white/70">{p}</span>
@@ -180,10 +180,9 @@ export default function LandingPage() {
       <section className="py-14 px-6 border-t border-white/[0.06]">
         <div className="max-w-6xl mx-auto flex flex-wrap items-center gap-x-10 gap-y-3">
           <span className="text-xs text-white/25 uppercase tracking-widest">Works with</span>
-          {["Zoom", "Google Meet", "Google Calendar"].map((t) => (
+          {["Zoom", "Google Meet", "Google Calendar", "Slack"].map((t) => (
             <span key={t} className="text-sm text-white/40 font-medium">{t}</span>
           ))}
-          <span className="text-sm text-white/20">Slack (coming soon)</span>
         </div>
       </section>
 
@@ -195,7 +194,7 @@ export default function LandingPage() {
           </h2>
           <p className="text-white/40 text-base mb-10">Free to use. No credit card required.</p>
           <a href="/login" className="inline-block bg-white text-black px-7 py-3 rounded-lg font-medium text-sm hover:bg-white/90 transition-colors">
-            Get started free
+            Get started
           </a>
         </div>
       </section>
