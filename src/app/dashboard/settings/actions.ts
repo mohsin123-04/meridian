@@ -34,6 +34,23 @@ export async function inviteTeammate(formData: FormData) {
   redirect("/dashboard/settings?success=Invite sent");
 }
 
+export async function saveSlackChannel(formData: FormData) {
+  const channelId = (formData.get("channel_id") as string)?.trim();
+  if (!channelId) return;
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  await supabase
+    .from("integrations")
+    .update({ refresh_token: channelId })
+    .eq("user_id", user.id)
+    .eq("provider", "slack");
+
+  revalidatePath("/dashboard/settings");
+}
+
 export async function renameWorkspace(formData: FormData) {
   const name = (formData.get("name") as string)?.trim();
   if (!name) redirect("/dashboard/settings?error=Workspace name cannot be empty");

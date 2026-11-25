@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { inviteTeammate, renameWorkspace } from "./actions";
+import SlackChannelPicker from "./slack-channel-picker";
 
 export default async function SettingsPage({
   searchParams,
@@ -18,7 +19,7 @@ export default async function SettingsPage({
   const [{ data: integrations }, { data: profile }] = await Promise.all([
     supabase
       .from("integrations")
-      .select("provider, status, provider_user_id, updated_at")
+      .select("provider, status, provider_user_id, updated_at, refresh_token")
       .eq("user_id", user.id),
     supabase
       .from("profiles")
@@ -29,6 +30,7 @@ export default async function SettingsPage({
 
   const google = integrations?.find((i) => i.provider === "google");
   const zoom = integrations?.find((i) => i.provider === "zoom");
+  const slack = integrations?.find((i) => i.provider === "slack");
   const workspaceName = (profile?.workspaces as unknown as { id: string; name: string } | null)?.name ?? "";
 
   return (
@@ -115,6 +117,50 @@ export default async function SettingsPage({
             connectHref="/api/integrations/zoom/connect"
             disconnectHref="/api/integrations/zoom/disconnect"
           />
+
+          {/* Slack */}
+          <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl px-5 py-4">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="shrink-0 w-9 h-9 rounded-lg bg-white/[0.06] flex items-center justify-center">
+                  <SlackIcon />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-medium">Slack</p>
+                    {slack && (
+                      <span className="inline-flex items-center gap-1 text-xs text-emerald-400">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
+                        Connected
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-white/40 mt-0.5">
+                    {slack
+                      ? slack.provider_user_id
+                      : "Post meeting summaries to a Slack channel automatically."}
+                  </p>
+                </div>
+              </div>
+              <a
+                href={slack ? "/api/integrations/slack/disconnect" : "/api/integrations/slack/connect"}
+                className={
+                  slack
+                    ? "shrink-0 text-xs text-white/35 hover:text-red-400 transition-colors"
+                    : "shrink-0 px-3 py-1.5 rounded-lg bg-white text-black text-xs font-medium hover:bg-white/90 transition-colors"
+                }
+              >
+                {slack ? "Disconnect" : "Connect"}
+              </a>
+            </div>
+
+            {slack && (
+              <div className="mt-4 pt-4 border-t border-white/[0.05]">
+                <p className="text-xs text-white/40 mb-2">Post summaries to</p>
+                <SlackChannelPicker savedChannelId={slack.refresh_token ?? undefined} />
+              </div>
+            )}
+          </div>
         </div>
       </section>
     </div>
@@ -191,6 +237,17 @@ function ZoomIcon() {
       <rect width="24" height="24" rx="4" fill="#2D8CFF" />
       <path d="M4 8.5C4 7.67 4.67 7 5.5 7H13C13.83 7 14.5 7.67 14.5 8.5V15.5C14.5 16.33 13.83 17 13 17H5.5C4.67 17 4 16.33 4 15.5V8.5Z" fill="white" />
       <path d="M15.5 10.5L20 8V16L15.5 13.5V10.5Z" fill="white" />
+    </svg>
+  );
+}
+
+function SlackIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24">
+      <path fill="#E01E5A" d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313z" />
+      <path fill="#36C5F0" d="M8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zM8.834 6.313a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312z" />
+      <path fill="#2EB67D" d="M18.956 8.834a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zM17.688 8.834a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312z" />
+      <path fill="#ECB22E" d="M15.165 18.956a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zM15.165 17.688a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313A2.527 2.527 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.523h-6.313z" />
     </svg>
   );
 }

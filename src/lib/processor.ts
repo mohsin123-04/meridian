@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
 import { createClient } from "@/lib/supabase/server";
+import { postMeetingSummary } from "@/lib/slack";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
@@ -167,6 +168,42 @@ export async function processMeeting(
       .from("meetings")
       .update({ status: "processed" })
       .eq("id", meetingId);
+
+    // Post summary to Slack if workspace has an integration with a channel configured
+    try {
+      const { data: slackIntegration } = await supabase
+        .from("integrations")
+        .select("access_token, refresh_token")
+        .eq("workspace_id", workspaceId)
+        .eq("provider", "slack")
+        .not("refresh_token", "is", null)
+        .limit(1)
+        .single();
+
+      if (slackIntegration?.access_token && slackIntegration?.refresh_token) {
+        const { data: meetingRow } = await supabase
+          .from("meetings")
+          .select("id, title, started_at")
+          .eq("id", meetingId)
+          .single();
+
+        if (meetingRow) {
+          await postMeetingSummary({
+            botToken: slackIntegration.access_token,
+            channelId: slackIntegration.refresh_token,
+            meetingId: meetingRow.id,
+            title: meetingRow.title,
+            startedAt: meetingRow.started_at,
+            decisions: extracted.decisions ?? [],
+            actionItems: extracted.action_items ?? [],
+            efficiencyScore: extracted.health?.efficiency_score ?? null,
+            appUrl: process.env.NEXT_PUBLIC_APP_URL ?? "",
+          });
+        }
+      }
+    } catch (slackErr) {
+      console.error("Slack post failed (non-fatal):", slackErr);
+    }
 
   } catch (err) {
     console.error(`AI processing failed for meeting ${meetingId}:`, err);
