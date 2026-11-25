@@ -10,20 +10,34 @@ export default function ProcessTrigger({ meetingId }: { meetingId: string }) {
   useEffect(() => {
     let cancelled = false;
 
-    async function run() {
-      await fetch("/api/process-meeting", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ meetingId }),
-      });
-      if (!cancelled) {
-        setDone(true);
-        router.refresh();
-      }
-    }
+    // Fire processing — don't await, polling drives the refresh
+    fetch("/api/process-meeting", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ meetingId }),
+    });
 
-    run();
-    return () => { cancelled = true; };
+    // Poll status every 2s, refresh as soon as it leaves processing
+    const poll = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/meeting-status?id=${meetingId}`);
+        const { status } = await res.json();
+        if (status !== "pending" && status !== "processing") {
+          clearInterval(poll);
+          if (!cancelled) {
+            setDone(true);
+            router.refresh();
+          }
+        }
+      } catch {
+        // network blip — keep polling
+      }
+    }, 2000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(poll);
+    };
   }, [meetingId, router]);
 
   if (done) return null;
