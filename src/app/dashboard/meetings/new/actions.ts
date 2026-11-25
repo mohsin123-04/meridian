@@ -1,7 +1,6 @@
 "use server";
 
 import { createAdminClient } from "@/lib/supabase/admin";
-import { processMeeting } from "@/lib/processor";
 import { getAuthUser, getProfile } from "@/lib/dal";
 import { redirect } from "next/navigation";
 
@@ -36,7 +35,5 @@ export async function uploadTranscript(formData: FormData) {
 
   if (error || !meeting) redirect("/dashboard/meetings/new?error=Failed to create meeting");
 
-  processMeeting(meeting.id, transcript, profile.workspace_id).catch(console.error);
-
-  redirect(`/dashboard/meetings/${meeting.id}`);
+  redirect(`/dashboard/meetings/${meeting.id}?process=1`);
 }

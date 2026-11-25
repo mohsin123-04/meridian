@@ -4,9 +4,17 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { reprocessMeeting } from "./actions";
+import ProcessTrigger from "./process-trigger";
 
-export default async function MeetingDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function MeetingDetailPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ process?: string }>;
+}) {
   const { id } = await params;
+  const { process: shouldProcess } = await searchParams;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
@@ -39,6 +47,9 @@ export default async function MeetingDetailPage({ params }: { params: Promise<{ 
 
   return (
     <div className="p-8 max-w-3xl">
+      {shouldProcess && meeting.status !== "processed" && (
+        <ProcessTrigger meetingId={id} />
+      )}
       {/* Back */}
       <Link href="/dashboard/meetings" className="text-xs text-white/35 hover:text-white transition-colors mb-6 inline-block">
         ← Meetings
