@@ -21,8 +21,10 @@ export async function createWorkspace(formData: FormData) {
   const name = formData.get("name") as string;
   let slug = slugify(name);
 
-  // Ensure slug uniqueness by appending random suffix if taken
-  const { data: existing } = await supabase
+  const admin = createAdminClient();
+
+
+  const { data: existing } = await admin
     .from("workspaces")
     .select("id")
     .eq("slug", slug)
@@ -32,7 +34,6 @@ export async function createWorkspace(formData: FormData) {
     slug = `${slug}-${Math.random().toString(36).slice(2, 6)}`;
   }
 
-  const admin = createAdminClient();
   const { data: workspace, error: wsError } = await admin
     .from("workspaces")
     .insert({ name, slug })
