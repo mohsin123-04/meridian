@@ -1,5 +1,5 @@
 import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { postMeetingSummary } from "@/lib/slack";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
@@ -81,7 +81,7 @@ export async function processMeeting(
   transcript: string,
   workspaceId: string
 ): Promise<void> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   try {
     const model = genAI.getGenerativeModel({
@@ -108,19 +108,19 @@ export async function processMeeting(
     if (!result) throw new Error("Gemini failed after retries");
     const text = result.response.text();
     const extracted = JSON.parse(text);
+    console.log(`[processor] Gemini extracted: ${extracted.decisions?.length} decisions, ${extracted.action_items?.length} action items`);
 
-    // Update meeting title if we generated one
     if (extracted.title) {
-      await supabase
+      const { error: titleErr } = await supabase
         .from("meetings")
         .update({ title: extracted.title })
         .eq("id", meetingId)
         .is("title", null);
+      if (titleErr) console.error("[processor] title update error:", titleErr);
     }
 
-    // Insert decisions
     if (extracted.decisions?.length > 0) {
-      await supabase.from("decisions").insert(
+      const { error: decErr } = await supabase.from("decisions").insert(
         extracted.decisions.map((d: any) => ({
           meeting_id: meetingId,
           workspace_id: workspaceId,
@@ -129,11 +129,11 @@ export async function processMeeting(
           topics: d.topics ?? [],
         }))
       );
+      if (decErr) throw new Error(`decisions insert failed: ${decErr.message}`);
     }
 
-    // Insert action items
     if (extracted.action_items?.length > 0) {
-      await supabase.from("action_items").insert(
+      const { error: aiErr } = await supabase.from("action_items").insert(
         extracted.action_items.map((a: any) => ({
           meeting_id: meetingId,
           workspace_id: workspaceId,
@@ -143,11 +143,11 @@ export async function processMeeting(
           status: "open",
         }))
       );
+      if (aiErr) throw new Error(`action_items insert failed: ${aiErr.message}`);
     }
 
-    // Insert meeting health
     const health = extracted.health;
-    await supabase.from("meeting_health").upsert({
+    const { error: healthErr } = await supabase.from("meeting_health").upsert({
       meeting_id: meetingId,
       workspace_id: workspaceId,
       efficiency_score: health.efficiency_score,
@@ -156,8 +156,8 @@ export async function processMeeting(
       recurring_topics: health.recurring_topics ?? [],
       dominant_speaker: health.dominant_speaker,
     }, { onConflict: "meeting_id" });
+    if (healthErr) throw new Error(`meeting_health upsert failed: ${healthErr.message}`);
 
-    // Insert participants with talk time
     if (extracted.participants?.length > 0) {
       const { data: meeting } = await supabase
         .from("meetings")
@@ -167,20 +167,21 @@ export async function processMeeting(
 
       const totalSecs = (meeting?.duration_mins ?? 60) * 60;
 
-      await supabase.from("meeting_participants").insert(
+      const { error: partErr } = await supabase.from("meeting_participants").insert(
         extracted.participants.map((p: any) => ({
           meeting_id: meetingId,
           name: p.name,
           talk_time_secs: Math.round((p.talk_time_pct / 100) * totalSecs),
         }))
       );
+      if (partErr) throw new Error(`meeting_participants insert failed: ${partErr.message}`);
     }
 
-    // Mark meeting as processed
-    await supabase
+    const { error: statusErr } = await supabase
       .from("meetings")
       .update({ status: "processed" })
       .eq("id", meetingId);
+    if (statusErr) throw new Error(`status update failed: ${statusErr.message}`);
 
     // Post summary to Slack if workspace has an integration with a channel configured
     try {
