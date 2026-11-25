@@ -47,7 +47,7 @@ export default async function MeetingDetailPage({
 
   return (
     <div className="p-8 max-w-3xl">
-      {shouldProcess && meeting.status !== "processed" && (
+      {(shouldProcess || meeting.status === "pending" || meeting.status === "processing") && meeting.status !== "processed" && (
         <ProcessTrigger meetingId={id} />
       )}
       {/* Back */}

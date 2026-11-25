@@ -2,8 +2,6 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { processMeeting } from "@/lib/processor";
-import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 export async function reprocessMeeting(formData: FormData) {
@@ -15,13 +13,11 @@ export async function reprocessMeeting(formData: FormData) {
 
   const { data: meeting } = await supabase
     .from("meetings")
-    .select("id, transcript, workspace_id")
+    .select("id, transcript")
     .eq("id", meetingId)
     .single();
 
-  if (!meeting?.transcript) {
-    redirect(`/dashboard/meetings/${meetingId}`);
-  }
+  if (!meeting?.transcript) redirect(`/dashboard/meetings/${meetingId}`);
 
   const admin = createAdminClient();
 
@@ -32,12 +28,7 @@ export async function reprocessMeeting(formData: FormData) {
     admin.from("meeting_participants").delete().eq("meeting_id", meetingId),
   ]);
 
-  await admin
-    .from("meetings")
-    .update({ status: "processing" })
-    .eq("id", meetingId);
+  await admin.from("meetings").update({ status: "pending" }).eq("id", meetingId);
 
-  processMeeting(meetingId, meeting.transcript, meeting.workspace_id).catch(console.error);
-
-  revalidatePath(`/dashboard/meetings/${meetingId}`);
+  redirect(`/dashboard/meetings/${meetingId}?process=1`);
 }
