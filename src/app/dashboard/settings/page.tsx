@@ -20,7 +20,7 @@ export default async function SettingsPage({
   const admin = createAdminClient();
   const { data: integrations } = await admin
     .from("integrations")
-    .select("provider, status, provider_user_id, updated_at, refresh_token")
+    .select("provider, provider_user_id, updated_at, refresh_token")
     .eq("user_id", user.id);
 
   const google = integrations?.find((i) => i.provider === "google");
