@@ -1,21 +1,15 @@
-import { createClient } from "@/lib/supabase/server";
 import { signOut } from "@/app/login/actions";
 import { redirect } from "next/navigation";
 import SyncTrigger from "./sync-trigger";
 import NavItems from "./nav-items";
 import SearchBar from "./search-bar";
+import { getAuthUser, getProfile } from "@/lib/dal";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
+  const user = await getAuthUser();
   if (!user) redirect("/login");
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("full_name, workspace_id, workspaces(name)")
-    .eq("id", user.id)
-    .single();
+  const profile = await getProfile();
 
   return (
     <div className="min-h-screen bg-[#09080f] text-white flex">

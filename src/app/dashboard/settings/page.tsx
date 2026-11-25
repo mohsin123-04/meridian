@@ -4,29 +4,24 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { inviteTeammate, renameWorkspace } from "./actions";
 import SlackChannelPicker from "./slack-channel-picker";
+import { getAuthUser, getProfile } from "@/lib/dal";
 
 export default async function SettingsPage({
   searchParams,
 }: {
   searchParams: Promise<{ success?: string; error?: string }>;
 }) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getAuthUser();
   if (!user) redirect("/login");
 
   const params = await searchParams;
+  const profile = await getProfile();
 
-  const [{ data: integrations }, { data: profile }] = await Promise.all([
-    supabase
-      .from("integrations")
-      .select("provider, status, provider_user_id, updated_at, refresh_token")
-      .eq("user_id", user.id),
-    supabase
-      .from("profiles")
-      .select("workspace_id, workspaces(id, name)")
-      .eq("id", user.id)
-      .single(),
-  ]);
+  const supabase = await createClient();
+  const { data: integrations } = await supabase
+    .from("integrations")
+    .select("provider, status, provider_user_id, updated_at, refresh_token")
+    .eq("user_id", user.id);
 
   const google = integrations?.find((i) => i.provider === "google");
   const zoom = integrations?.find((i) => i.provider === "zoom");

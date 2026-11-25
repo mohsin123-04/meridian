@@ -3,21 +3,17 @@ export const dynamic = "force-dynamic";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { getAuthUser, getProfile } from "@/lib/dal";
 
 export default async function DashboardPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getAuthUser();
   if (!user) redirect("/login");
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("workspace_id")
-    .eq("id", user.id)
-    .single();
-
+  const profile = await getProfile();
   if (!profile?.workspace_id) redirect("/onboarding");
 
   const workspaceId = profile.workspace_id;
+  const supabase = await createClient();
 
   const [{ data: meetings }, { data: decisions }, { data: integrations }] = await Promise.all([
     supabase
