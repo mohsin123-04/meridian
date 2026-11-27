@@ -18,10 +18,26 @@ export default async function SettingsPage({
   const profile = await getProfile();
 
   const admin = createAdminClient();
-  const { data: integrations } = await admin
-    .from("integrations")
-    .select("provider, provider_user_id, updated_at, refresh_token")
-    .eq("user_id", user.id);
+  const workspaceId = profile?.workspace_id;
+
+  const [
+    { data: integrations },
+    { data: members },
+    { data: { users: authUsers } },
+  ] = await Promise.all([
+    admin
+      .from("integrations")
+      .select("provider, provider_user_id, updated_at, refresh_token")
+      .eq("user_id", user.id),
+    admin
+      .from("profiles")
+      .select("id, full_name, role, created_at")
+      .eq("workspace_id", workspaceId!)
+      .order("created_at"),
+    admin.auth.admin.listUsers({ perPage: 200 }),
+  ]);
+
+  const emailMap = new Map(authUsers.map((u) => [u.id, u.email ?? ""]));
 
   const google = integrations?.find((i) => i.provider === "google");
   const zoom = integrations?.find((i) => i.provider === "zoom");
@@ -70,6 +86,27 @@ export default async function SettingsPage({
 
       <section className="mb-10">
         <h2 className="text-xs font-medium text-white/40 uppercase tracking-widest mb-3">Team</h2>
+        <div className="space-y-2 mb-3">
+          {members?.map((m) => {
+            const email = emailMap.get(m.id) ?? "";
+            const isYou = m.id === user.id;
+            return (
+              <div key={m.id} className="flex items-center gap-3 bg-white/[0.03] border border-white/[0.07] rounded-xl px-5 py-3">
+                <div className="w-8 h-8 rounded-full bg-white/[0.08] flex items-center justify-center text-xs font-medium text-white/60 shrink-0">
+                  {(m.full_name ?? email).charAt(0).toUpperCase()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm truncate">
+                    {m.full_name ?? email}
+                    {isYou && <span className="ml-2 text-xs text-white/30">you</span>}
+                  </p>
+                  {m.full_name && <p className="text-xs text-white/35 truncate">{email}</p>}
+                </div>
+                <span className="shrink-0 text-xs text-white/30 capitalize">{m.role}</span>
+              </div>
+            );
+          })}
+        </div>
         <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl px-5 py-4">
           <p className="text-sm font-medium mb-1">Invite a teammate</p>
           <p className="text-xs text-white/40 mb-4">They&apos;ll get an email and join your workspace automatically.</p>
