@@ -77,41 +77,40 @@ export default async function DecisionsPage({
           )}
 
           {/* Decision list */}
-          <div className="flex-1 space-y-3 min-w-0">
-            {decisions.map((d) => {
-              const meeting = Array.isArray(d.meetings) ? d.meetings[0] : d.meetings;
-              return (
-                <div key={d.id} className="bg-white/[0.03] border border-white/[0.07] rounded-xl px-5 py-4">
-                  <p className="text-sm font-medium leading-snug">{d.summary}</p>
-                  {d.context && (
-                    <p className="text-xs text-white/45 mt-2 leading-relaxed">{d.context}</p>
-                  )}
-
-                  <div className="flex items-center justify-between gap-4 mt-3">
-                    <div className="flex flex-wrap gap-1.5">
-                      {d.topics?.map((t: string) => (
-                        <span key={t} className="text-xs px-2 py-0.5 rounded-full bg-violet-500/10 text-violet-400 border border-violet-500/20">
-                          {t}
-                        </span>
-                      ))}
-                    </div>
-
-                    {meeting && (
-                      <Link
-                        href={`/dashboard/meetings/${meeting.id}`}
-                        className="shrink-0 text-xs text-white/30 hover:text-white transition-colors"
-                      >
-                        {meeting.title ?? "View meeting"} →
-                      </Link>
+          <div className="flex-1 min-w-0">
+            <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl overflow-hidden">
+              {decisions.map((d, i) => {
+                const meeting = Array.isArray(d.meetings) ? d.meetings[0] : d.meetings;
+                return (
+                  <div key={d.id} className={`px-5 py-4 ${i < decisions.length - 1 ? "border-b border-white/[0.05]" : ""}`}>
+                    <p className="text-sm leading-snug">{d.summary}</p>
+                    {d.context && (
+                      <p className="text-xs text-white/40 mt-1.5 leading-relaxed">{d.context}</p>
                     )}
+                    <div className="flex items-center justify-between gap-4 mt-2.5">
+                      <div className="flex flex-wrap gap-1.5">
+                        {d.topics?.map((t: string) => (
+                          <span key={t} className="text-xs px-2 py-0.5 rounded-full bg-violet-500/10 text-violet-400 border border-violet-500/20">
+                            {t}
+                          </span>
+                        ))}
+                        <span className="text-xs text-white/20">
+                          {new Date(d.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                        </span>
+                      </div>
+                      {meeting && (
+                        <Link
+                          href={`/dashboard/meetings/${meeting.id}`}
+                          className="shrink-0 text-xs text-white/25 hover:text-white/60 transition-colors"
+                        >
+                          {meeting.title ?? "Meeting"} →
+                        </Link>
+                      )}
+                    </div>
                   </div>
-
-                  <p className="text-xs text-white/20 mt-2">
-                    {new Date(d.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-                  </p>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         </div>
       )}

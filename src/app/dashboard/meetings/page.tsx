@@ -96,12 +96,13 @@ export default async function MeetingsPage() {
             {seriesEntries.length > 0 && (
               <h2 className="text-xs font-medium text-white/40 uppercase tracking-widest mb-3">All meetings</h2>
             )}
-            <div className="space-y-2">
-              {meetings.map((m) => (
+            <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl overflow-hidden">
+              {meetings.map((m, i) => (
                 <MeetingRow
                   key={m.id}
                   meeting={m}
                   isRecurring={(titleCounts.get(m.title?.trim() ?? "") ?? 0) >= 2}
+                  divider={i < meetings.length - 1}
                 />
               ))}
             </div>
@@ -122,10 +123,10 @@ type MeetingWithHealth = {
   meeting_health: { efficiency_score: number | null; decision_count: number | null; action_item_count: number | null }[] | null;
 };
 
-function MeetingRow({ meeting, isRecurring }: { meeting: MeetingWithHealth; isRecurring: boolean }) {
-  const statusColor =
-    meeting.status === "processed" ? "text-emerald-400" :
-    meeting.status === "failed" ? "text-red-400" : "text-amber-400";
+function MeetingRow({ meeting, isRecurring, divider }: { meeting: MeetingWithHealth; isRecurring: boolean; divider: boolean }) {
+  const dotColor =
+    meeting.status === "processed" ? "bg-emerald-400" :
+    meeting.status === "failed" ? "bg-red-400" : "bg-amber-400";
 
   const sourceLabel =
     meeting.source === "google_meet" ? "Google Meet" :
@@ -138,30 +139,28 @@ function MeetingRow({ meeting, isRecurring }: { meeting: MeetingWithHealth; isRe
   return (
     <Link
       href={`/dashboard/meetings/${meeting.id}`}
-      className="flex items-center gap-4 bg-white/[0.03] border border-white/[0.06] rounded-xl px-5 py-4 hover:bg-white/[0.05] active:bg-white/[0.07] active:scale-[0.995] transition-all"
+      className={`flex items-center gap-4 px-5 py-3.5 hover:bg-white/[0.03] active:bg-white/[0.05] transition-colors ${divider ? "border-b border-white/[0.05]" : ""}`}
     >
-      {/* Score badge */}
-      <div className="shrink-0 w-10 h-10 rounded-lg flex items-center justify-center bg-white/[0.05]">
+      {/* Score */}
+      <div className="shrink-0 w-9 h-9 rounded-lg flex items-center justify-center bg-white/[0.04]">
         {health?.efficiency_score != null ? (
           <span className={`text-sm font-semibold ${scoreColor(health.efficiency_score)}`}>
             {health.efficiency_score}
           </span>
         ) : (
-          <span className="text-white/20 text-xs">—</span>
+          <div className={`w-1.5 h-1.5 rounded-full ${dotColor} opacity-60`} />
         )}
       </div>
 
       {/* Main info */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <p className="text-sm font-medium truncate">{meeting.title ?? "Untitled meeting"}</p>
+          <p className="text-sm truncate">{meeting.title ?? "Untitled meeting"}</p>
           {isRecurring && (
-            <span className="shrink-0 text-xs text-white/25 border border-white/[0.08] rounded px-1.5 py-0.5">
-              Recurring
-            </span>
+            <span className="shrink-0 text-[10px] text-white/20 border border-white/[0.08] rounded px-1.5 py-0.5">Recurring</span>
           )}
         </div>
-        <p className="text-xs text-white/35 mt-0.5">
+        <p className="text-xs text-white/30 mt-0.5">
           {meeting.started_at
             ? new Date(meeting.started_at).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })
             : "—"}
@@ -172,19 +171,11 @@ function MeetingRow({ meeting, isRecurring }: { meeting: MeetingWithHealth; isRe
 
       {/* Stats */}
       {health && meeting.status === "processed" && (
-        <div className="shrink-0 flex items-center gap-4 text-xs text-white/35">
-          {health.decision_count != null && (
-            <span>{health.decision_count} decision{health.decision_count !== 1 ? "s" : ""}</span>
-          )}
-          {health.action_item_count != null && (
-            <span>{health.action_item_count} action{health.action_item_count !== 1 ? "s" : ""}</span>
-          )}
+        <div className="shrink-0 flex items-center gap-3 text-xs text-white/25">
+          {health.decision_count != null && <span>{health.decision_count}d</span>}
+          {health.action_item_count != null && <span>{health.action_item_count}a</span>}
         </div>
       )}
-
-      <span className={`shrink-0 text-xs ${statusColor} capitalize`}>
-        {meeting.status ?? "pending"}
-      </span>
     </Link>
   );
 }

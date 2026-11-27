@@ -47,8 +47,8 @@ export default async function ActionItemsPage() {
             {!open.length ? (
               <p className="text-sm text-white/25 px-1">All caught up.</p>
             ) : (
-              <div className="space-y-2">
-                {open.map((item) => <ActionRow key={item.id} item={item} />)}
+              <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl overflow-hidden">
+                {open.map((item, i) => <ActionRow key={item.id} item={item} divider={i < open.length - 1} />)}
               </div>
             )}
           </section>
@@ -59,8 +59,8 @@ export default async function ActionItemsPage() {
                 <h2 className="text-xs font-medium text-white/40 uppercase tracking-widest">Completed</h2>
                 <span className="text-xs text-white/25">{done.length}</span>
               </div>
-              <div className="space-y-2">
-                {done.map((item) => <ActionRow key={item.id} item={item} />)}
+              <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl overflow-hidden opacity-50">
+                {done.map((item, i) => <ActionRow key={item.id} item={item} divider={i < done.length - 1} />)}
               </div>
             </section>
           )}
@@ -80,7 +80,7 @@ type ActionItem = {
   meetings: { id: string; title: string | null; started_at: string | null } | { id: string; title: string | null; started_at: string | null }[] | null;
 };
 
-function ActionRow({ item }: { item: ActionItem }) {
+function ActionRow({ item, divider }: { item: ActionItem; divider: boolean }) {
   const meeting = Array.isArray(item.meetings) ? item.meetings[0] : item.meetings;
   const isDone = item.status === "done";
 
@@ -90,7 +90,7 @@ function ActionRow({ item }: { item: ActionItem }) {
     new Date(item.due_date) < new Date();
 
   return (
-    <div className={`flex items-start gap-3 bg-white/[0.03] border rounded-xl px-5 py-4 ${isDone ? "border-white/[0.04] opacity-50" : "border-white/[0.07]"}`}>
+    <div className={`flex items-start gap-3 px-5 py-3.5 ${divider ? "border-b border-white/[0.05]" : ""}`}>
       <form action={toggleActionItemStatus}>
         <input type="hidden" name="id" value={item.id} />
         <input type="hidden" name="status" value={isDone ? "open" : "done"} />

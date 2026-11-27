@@ -33,7 +33,7 @@ export default async function BriefsPage() {
         <form action="/api/briefs/upcoming" method="POST">
           <button
             type="submit"
-            className="text-xs px-4 py-2 rounded-lg bg-white text-black font-medium hover:bg-white/90 transition-colors"
+            className="text-xs px-4 py-2 rounded-lg bg-white text-black font-medium hover:bg-white/90 active:bg-white/75 active:scale-95 transition-all"
           >
             Generate upcoming
           </button>
