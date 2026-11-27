@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import SyncTrigger from "./sync-trigger";
 import NavItems from "./nav-items";
 import SearchBar from "./search-bar";
+import NavProgress from "./nav-progress";
 import { getAuthUser, getProfile } from "@/lib/dal";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -29,7 +30,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           <form action={signOut}>
             <button
               type="submit"
-              className="w-full text-left px-2 py-2 rounded-lg text-xs text-white/40 hover:text-white hover:bg-white/[0.06] transition-colors"
+              className="w-full text-left px-2 py-2 rounded-lg text-xs text-white/40 hover:text-white hover:bg-white/[0.06] active:bg-white/[0.1] active:scale-[0.97] transition-all"
             >
               Sign out
             </button>
@@ -40,6 +41,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
       {/* Main */}
       <main className="flex-1 min-w-0">{children}</main>
       <SyncTrigger />
+      <NavProgress />
     </div>
   );
 }
