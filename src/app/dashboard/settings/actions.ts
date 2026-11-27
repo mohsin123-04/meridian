@@ -5,6 +5,25 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+export async function updateProfile(formData: FormData) {
+  const fullName = (formData.get("full_name") as string)?.trim();
+  if (!fullName) redirect("/dashboard/settings?error=Name cannot be empty");
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({ full_name: fullName })
+    .eq("id", user.id);
+
+  if (error) redirect(`/dashboard/settings?error=${encodeURIComponent(error.message)}`);
+
+  revalidatePath("/dashboard");
+  redirect("/dashboard/settings?success=Profile updated");
+}
+
 export async function inviteTeammate(formData: FormData) {
   const email = (formData.get("email") as string)?.trim().toLowerCase();
   if (!email) redirect("/dashboard/settings?error=Email is required");

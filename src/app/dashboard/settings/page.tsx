@@ -2,8 +2,9 @@ export const dynamic = "force-dynamic";
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { redirect } from "next/navigation";
-import { inviteTeammate, renameWorkspace } from "./actions";
+import { inviteTeammate, renameWorkspace, updateProfile } from "./actions";
 import SlackChannelPicker from "./slack-channel-picker";
+import ThemeToggle from "./theme-toggle";
 import { getAuthUser, getProfile } from "@/lib/dal";
 
 export default async function SettingsPage({
@@ -59,6 +60,34 @@ export default async function SettingsPage({
           {params.error}
         </div>
       )}
+
+      <section className="mb-10">
+        <h2 className="text-xs font-medium text-white/40 uppercase tracking-widest mb-3">Profile</h2>
+        <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl px-5 py-4 space-y-4">
+          <form action={updateProfile} className="flex gap-2">
+            <input
+              name="full_name"
+              type="text"
+              defaultValue={profile?.full_name ?? ""}
+              placeholder="Your name"
+              required
+              className="flex-1 bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-white/20"
+            />
+            <button
+              type="submit"
+              className="shrink-0 bg-white text-black px-4 py-2 rounded-lg text-sm font-medium hover:bg-white/90 active:bg-white/75 active:scale-95 transition-all"
+            >
+              Save
+            </button>
+          </form>
+          <p className="text-xs text-white/30">{user.email}</p>
+        </div>
+      </section>
+
+      <section className="mb-10">
+        <h2 className="text-xs font-medium text-white/40 uppercase tracking-widest mb-3">Appearance</h2>
+        <ThemeToggle />
+      </section>
 
       <section className="mb-10">
         <h2 className="text-xs font-medium text-white/40 uppercase tracking-widest mb-3">Workspace</h2>

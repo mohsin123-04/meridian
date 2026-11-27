@@ -13,7 +13,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const profile = await getProfile();
 
   return (
-    <div className="min-h-screen bg-[#09080f] text-white flex">
+    <div className="min-h-screen bg-[var(--app-bg)] text-white flex">
       {/* Sidebar */}
       <aside className="w-56 shrink-0 border-r border-white/[0.06] flex flex-col">
         <div className="px-5 pt-6 pb-4 border-b border-white/[0.06]">

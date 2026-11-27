@@ -19,10 +19,21 @@
   }
 }
 
+:root {
+  --app-bg: #09080f;
+}
+
+html.light {
+  --app-bg: #f5f4f0;
+  /* Flip Tailwind's white to near-black so all text-white/*, bg-white/*, border-white/* adapt */
+  --color-white: oklch(0.141 0.005 285.75);
+}
+
 body {
-  background: var(--background);
+  background-color: var(--app-bg);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 @keyframes nav-progress {
