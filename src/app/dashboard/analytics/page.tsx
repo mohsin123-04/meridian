@@ -28,7 +28,7 @@ export default async function AnalyticsPage() {
       .limit(60),
     supabase
       .from("action_items")
-      .select("status, due_date")
+      .select("status, due_date, owner_name")
       .eq("workspace_id", profile.workspace_id),
   ]);
 
@@ -96,6 +96,46 @@ export default async function AnalyticsPage() {
         : null,
     }))
     .sort((a, b) => (b.avg ?? 0) - (a.avg ?? 0));
+
+  // Decisions per week — last 8 weeks
+  const weekMap = new Map<string, { label: string; decisions: number }>();
+  for (let w = 7; w >= 0; w--) {
+    const d = new Date();
+    d.setDate(d.getDate() - w * 7);
+    const mon = new Date(d);
+    mon.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+    const key = mon.toISOString().slice(0, 10);
+    const label = mon.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    if (!weekMap.has(key)) weekMap.set(key, { label, decisions: 0 });
+  }
+  for (const m of processed) {
+    if (!m.started_at) continue;
+    const d = new Date(m.started_at);
+    const mon = new Date(d);
+    mon.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+    const key = mon.toISOString().slice(0, 10);
+    if (weekMap.has(key)) {
+      const h = Array.isArray(m.meeting_health) ? m.meeting_health[0] : m.meeting_health;
+      weekMap.get(key)!.decisions += h?.decision_count ?? 0;
+    }
+  }
+  const weeklyDecisions = [...weekMap.values()];
+  const maxDecisions = Math.max(...weeklyDecisions.map((w) => w.decisions), 1);
+
+  // Top action item owners
+  const ownerMap = new Map<string, { open: number; done: number }>();
+  for (const item of actionItems ?? []) {
+    const name = item.owner_name?.trim();
+    if (!name) continue;
+    if (!ownerMap.has(name)) ownerMap.set(name, { open: 0, done: 0 });
+    const entry = ownerMap.get(name)!;
+    if (item.status === "done") entry.done++;
+    else entry.open++;
+  }
+  const topOwners = [...ownerMap.entries()]
+    .map(([name, counts]) => ({ name, ...counts, total: counts.open + counts.done }))
+    .sort((a, b) => b.total - a.total)
+    .slice(0, 6);
 
   const hasData = processed.length > 0;
 
@@ -176,6 +216,34 @@ export default async function AnalyticsPage() {
             </section>
           )}
 
+          {/* Decisions per week */}
+          <section>
+            <h2 className="text-xs font-medium text-white/40 uppercase tracking-widest mb-4">
+              Decisions per week
+            </h2>
+            <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl px-5 py-5">
+              <div className="flex items-end gap-2 h-28 mb-3">
+                {weeklyDecisions.map((w, i) => (
+                  <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                    <span className="text-xs text-white/30">{w.decisions > 0 ? w.decisions : ""}</span>
+                    <div
+                      className="w-full rounded-sm bg-white/20 hover:bg-white/35 transition-colors"
+                      style={{ height: `${Math.max((w.decisions / maxDecisions) * 100, w.decisions > 0 ? 8 : 2)}%` }}
+                    />
+                  </div>
+                ))}
+              </div>
+              <div className="flex justify-between">
+                {weeklyDecisions.map((w, i) => (
+                  <div key={i} className="flex-1 text-center">
+                    <span className="text-[10px] text-white/20">{w.label.split(" ")[1]}</span>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-white/20 mt-1">{weeklyDecisions[0]?.label} — {weeklyDecisions[weeklyDecisions.length - 1]?.label}</p>
+            </div>
+          </section>
+
           {/* Two column: recurring leaderboard + action item health */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
@@ -209,6 +277,44 @@ export default async function AnalyticsPage() {
                           <span className="text-sm text-white/20">—</span>
                         )}
                       </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* Top owners */}
+            {topOwners.length > 0 && (
+              <section>
+                <h2 className="text-xs font-medium text-white/40 uppercase tracking-widest mb-4">
+                  Top action item owners
+                </h2>
+                <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl overflow-hidden">
+                  {topOwners.map((owner, i) => (
+                    <div
+                      key={owner.name}
+                      className={`flex items-center gap-3 px-5 py-3 ${i < topOwners.length - 1 ? "border-b border-white/[0.05]" : ""}`}
+                    >
+                      <div className="w-7 h-7 rounded-full bg-white/[0.08] flex items-center justify-center text-xs font-medium text-white/60 shrink-0">
+                        {owner.name.charAt(0).toUpperCase()}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm truncate">{owner.name}</p>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <div className="h-1 flex-1 bg-white/[0.06] rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-white/25 rounded-full"
+                              style={{ width: `${Math.round((owner.done / owner.total) * 100)}%` }}
+                            />
+                          </div>
+                          <span className="text-xs text-white/30 shrink-0">
+                            {owner.done}/{owner.total}
+                          </span>
+                        </div>
+                      </div>
+                      {owner.open > 0 && (
+                        <span className="text-xs text-amber-400 shrink-0">{owner.open} open</span>
+                      )}
                     </div>
                   ))}
                 </div>
