@@ -1,36 +1,73 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Meridian
 
-## Getting Started
+Meeting intelligence for teams. Connects to Zoom and Google Meet, pulls transcripts, and uses Gemini to extract decisions, action items, and a health score for every meeting. Results show up in a dashboard your whole workspace shares.
 
-First, run the development server:
+## What it does
+
+- Automatically captures meetings from Zoom (via webhook) and Google Meet (via Calendar API polling)
+- Runs transcripts through Gemini and extracts decisions, action items, participants, and an efficiency score
+- Posts a summary to Slack when a meeting finishes processing
+- Tracks action items across meetings with status toggling
+- Generates pre-meeting briefs based on past meeting history with the same attendees
+- Manual transcript upload for testing or one-off imports
+
+## Stack
+
+- **Next.js 16** (App Router, server actions, server components)
+- **Supabase** (Postgres, Auth, RLS)
+- **Gemini 2.5 Flash** for transcript analysis
+- **Tailwind CSS v4**
+- Deployed on Vercel
+
+## Running locally
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+You need a `.env.local` with the following:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+# App
+NEXT_PUBLIC_APP_URL=http://localhost:3000
 
-## Learn More
+# Zoom OAuth
+ZOOM_CLIENT_ID=
+ZOOM_CLIENT_SECRET=
+ZOOM_WEBHOOK_SECRET_TOKEN=
 
-To learn more about Next.js, take a look at the following resources:
+# Google OAuth
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# Gemini
+GEMINI_API_KEY=
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+# Slack OAuth
+SLACK_CLIENT_ID=
+SLACK_CLIENT_SECRET=
+```
 
-## Deploy on Vercel
+## Database
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Schema is in `supabase/schema.sql`. Run it against a fresh Supabase project. The main tables are `workspaces`, `profiles`, `meetings`, `decisions`, `action_items`, `meeting_health`, `meeting_participants`, and `integrations`.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+RLS is enabled on all tables. Server-side privileged operations (processing, OAuth callbacks) use the service role key via `createAdminClient()`.
+
+## Processing pipeline
+
+When a meeting ends, a webhook (Zoom) or calendar poll (Google Meet) creates a meeting row with status `pending`. The `/api/process-meeting` endpoint handles Gemini extraction with retry logic for 503s. Status updates are polled every 2 seconds on the meeting detail page so results appear without a manual refresh.
+
+## OAuth integrations
+
+Zoom and Google Meet need their redirect URIs configured in their respective developer portals. Slack requires a bot token and uses `refresh_token` to store the target channel ID.
+
+## Deployment
+
+Push to `main` deploys automatically via Vercel. The `maxDuration = 60` on the process-meeting route is required -- Gemini + DB writes can take a while.
